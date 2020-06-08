@@ -14,8 +14,9 @@ const API_URL = `https://stores-api.zakaz.ua/stores/48215616`;
 
 let addIsProccessed = false;
 
-bot.onText(/\/add(@.+) (.+)/, (msg, match) => {
+bot.onText(/\/add(@.+)? (.+)/, (msg, match) => {
   const chatId = msg.chat.id;
+
   const resp = match[2];
 
   axios
