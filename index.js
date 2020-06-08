@@ -1,5 +1,8 @@
 const TelegramBot = require("node-telegram-bot-api");
 const axios = require("axios");
+const Storage = require("node-storage");
+
+const db = new Storage("./orders-db");
 
 axios.defaults.headers.common = { "Accept-Language": "ru" };
 
@@ -9,7 +12,7 @@ const bot = new TelegramBot(token, { polling: true });
 
 const API_URL = `https://stores-api.zakaz.ua/stores/48215616`;
 
-let hasUncompletedCallback = false;
+let addIsProccessed = false;
 
 bot.onText(/\/metro add (.+)/, (msg, match) => {
   const chatId = msg.chat.id;
@@ -81,15 +84,15 @@ bot.on("callback_query", (cbQuery) => {
   }
 
   bot.sendMessage(cbQuery.message.chat.id, text);
-  hasUncompletedCallback = true;
+  addIsProccessed = data.ean || true;
 });
 
 bot.on("message", (msg) => {
   const chatId = msg.chat.id;
-  if (hasUncompletedCallback) {
-    // todo msg.text save to storage
+  if (addIsProccessed) {
     if (!isNaN(msg.text)) {
-      hasUncompletedCallback = false;
+      db.put(addIsProccessed, msg.text);
+      addIsProccessed = false;
       bot.sendMessage(chatId, "😎 Окич, добавил в корзину");
     }
   }
