@@ -87,7 +87,7 @@ bot.on("callback_query", (cbQuery) => {
 bot.on("message", (msg) => {
   const chatId = msg.chat.id;
   if (hasUncompletedCallback) {
-    // msg.text save to storage
+    // todo msg.text save to storage
     if (!isNaN(msg.text)) {
       hasUncompletedCallback = false;
       bot.sendMessage(chatId, "😎 Окич, добавил в корзину");
