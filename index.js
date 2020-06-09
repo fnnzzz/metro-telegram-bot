@@ -12,10 +12,11 @@ const bot = new TelegramBot(token, { polling: true });
 
 const API_URL = `https://stores-api.zakaz.ua/stores/48215616`;
 
-let addIsProccessed = false;
+let addProductInProccesing = false;
 
 bot.onText(/\/add(@.+)? (.+)/, (msg, match) => {
   const chatId = msg.chat.id;
+  console.log(match);
 
   const resp = match[2];
 
@@ -85,16 +86,30 @@ bot.on("callback_query", (cbQuery) => {
   }
 
   bot.sendMessage(cbQuery.message.chat.id, text);
-  addIsProccessed = data.ean || true;
+  addProductInProccesing = data.ean || true;
 });
 
 bot.on("message", (msg) => {
   const chatId = msg.chat.id;
-  if (addIsProccessed) {
+  if (addProductInProccesing) {
     if (!isNaN(msg.text)) {
-      db.put(addIsProccessed, msg.text);
-      addIsProccessed = false;
-      bot.sendMessage(chatId, "😎 Окич, добавил в корзину");
+      const productId = addProductInProccesing;
+      axios
+        .get(`${API_URL}/products/${productId}`)
+        .then(({ data: product }) => {
+          if (product) {
+            db.put(`${Date.now()}`, {
+              amount: msg.text,
+              ean: product.ean,
+              isAvailable: true,
+              product,
+            });
+            addProductInProccesing = false;
+            bot.sendMessage(chatId, "😎 Окич, добавил в корзину");
+          } else {
+            bot.sendMessage(chatId, "😢 Шото проблемка какая-то возникла");
+          }
+        });
     }
   }
 });
