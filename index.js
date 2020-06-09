@@ -16,8 +16,6 @@ let addProductInProccesing = false;
 
 bot.onText(/\/add(@\w+)?\s(.+)/, (msg, match) => {
   const chatId = msg.chat.id;
-  console.log(match);
-
   const resp = match[2];
 
   axios
@@ -92,6 +90,11 @@ bot.on("callback_query", (cbQuery) => {
 bot.on("message", (msg) => {
   const chatId = msg.chat.id;
   if (addProductInProccesing) {
+    if (+msg.text === 0 || msg.text.toLowerCase().trim() === "отмена") {
+      addProductInProccesing = false;
+      return bot.sendMessage(chatId, "❌ Охрана отмена");
+    }
+
     if (!isNaN(msg.text)) {
       const productId = addProductInProccesing;
       axios
