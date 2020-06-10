@@ -10,7 +10,8 @@
   "license": "ISC",
   "dependencies": {
     "axios": "^0.19.2",
-    "node-storage": "0.0.9",
+    "express": "^4.17.1",
+    "mongodb": "^3.5.8",
     "node-telegram-bot-api": "^0.50.0"
   }
 }

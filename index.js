@@ -1,14 +1,18 @@
 const TelegramBot = require("node-telegram-bot-api");
 const axios = require("axios");
-const Storage = require("node-storage");
+const express = require("express");
+const MongoClient = require("mongodb").MongoClient;
 
-const db = new Storage("./orders-db");
+const app = express();
+const port = 80;
 
 axios.defaults.headers.common = { "Accept-Language": "ru" };
 
-const token = process.env.BOT_TOKEN;
+const mongoDbUrl = `mongodb+srv://magicleadadmin:${process.env.MONGODB_PASSWORD}@sychidev.ki7vx.mongodb.net/<dbname>?retryWrites=true&w=majority`;
 
-const bot = new TelegramBot(token, { polling: true });
+const client = new MongoClient(mongoDbUrl, { useUnifiedTopology: true });
+
+const bot = new TelegramBot(process.env.BOT_TOKEN, { polling: true });
 
 const API_URL = `https://stores-api.zakaz.ua/stores/48215616`;
 
@@ -101,18 +105,58 @@ bot.on("message", (msg) => {
         .get(`${API_URL}/products/${productId}`)
         .then(({ data: product }) => {
           if (product) {
-            db.put(`${Date.now()}`, {
-              amount: msg.text,
-              ean: product.ean,
-              isAvailable: true,
-              product,
-            });
-            addProductInProccesing = false;
-            bot.sendMessage(chatId, "😎 Окич, добавил в корзину");
+            client.connect(
+              (err, _client) => {
+                if (err) {
+                  console.log(err);
+                  return sendErrorMessage(chatId);
+                }
+
+                _client
+                  .db("metro-bot")
+                  .collection("orders")
+                  .insertOne(
+                    {
+                      date: Date.now(),
+                      amount: msg.text,
+                      ean: product.ean,
+                      isAvailable: true,
+                      product,
+                    },
+                    (err, r) => {
+                      if (err) {
+                        console.log(err);
+                        return sendErrorMessage(chatId);
+                      }
+
+                      addProductInProccesing = false;
+                      bot.sendMessage(chatId, "😎 Окич, добавил в корзину");
+                    }
+                  );
+              },
+              (err) => {
+                if (err) {
+                  console.log(err);
+                  sendErrorMessage(chatId);
+                }
+              }
+            );
           } else {
-            bot.sendMessage(chatId, "😢 Шото проблемка какая-то возникла");
+            sendErrorMessage(chatId);
           }
         });
     }
   }
 });
+
+function sendErrorMessage(chatId) {
+  bot.sendMessage(chatId, "😢 Шото проблемка какая-то возникла");
+}
+
+app.get("/", (req, res) => {
+  res.send("Hello World!");
+});
+
+app.listen(port, () =>
+  console.log(`Example app listening at http://localhost:${port}`)
+);
