@@ -12,7 +12,7 @@ exec("docker build --rm -t metrobot .", (err, stdout) => {
     console.log(stdout);
 
     exec(
-      "docker run -d --rm -e BOT_TOKEN=${BOT_TOKEN} -p 80:80 --name metrobot-container metrobot",
+      "docker run -d --rm -e BOT_TOKEN=${BOT_TOKEN} -e MONGODB_PASSWORD=${MONGODB_PASSWORD} -p 80:80 --name metrobot-container metrobot",
       (err, stdout) => {
         if (err) {
           console.log(err);
