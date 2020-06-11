@@ -51,6 +51,7 @@ bot.onText(/\/add(@\w+)?\s(.+)/, (msg, match) => {
               {
                 text: product.title,
                 callback_data: JSON.stringify({
+                  title: product.title,
                   bundle: product.bundle,
                   ean: product.ean,
                   unit: product.unit,
@@ -72,6 +73,8 @@ bot.on("callback_query", (cbQuery) => {
   });
 
   const data = JSON.parse(cbQuery.data);
+
+  bot.sendMessage(cbQuery.message.chat.id, data.title);
 
   let text = "";
 
@@ -153,8 +156,38 @@ function sendErrorMessage(chatId) {
   bot.sendMessage(chatId, "😢 Шото проблемка какая-то возникла");
 }
 
-app.get("/", (req, res) => {
-  res.send("Hello World!");
+app.get("/get-cart", (req, res) => {
+  client.connect((err, _client) => {
+    const cursor = _client.db("metro-bot").collection("orders").find();
+
+    const dbRes = [];
+
+    cursor.each(function (err, item) {
+      dbRes.push(item);
+
+      if (item === null) {
+        const formattedResponse = dbRes.reduce((acc, item) => {
+          if (item === null) {
+            return acc;
+          }
+
+          const hasYet = acc.findIndex((_item) => item.ean === _item.ean);
+
+          if (hasYet !== -1) {
+            acc[hasYet] = {
+              ...acc[hasYet],
+              amount: `${+acc[hasYet].amount + +item.amount}`,
+            };
+            return acc;
+          }
+
+          return [...acc, item];
+        }, []);
+
+        res.json(formattedResponse.reverse());
+      }
+    });
+  });
 });
 
 app.listen(port, () =>
