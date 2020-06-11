@@ -2,9 +2,11 @@ const TelegramBot = require("node-telegram-bot-api");
 const axios = require("axios");
 const express = require("express");
 const MongoClient = require("mongodb").MongoClient;
+const cors = require("cors");
 
 const app = express();
 const port = 80;
+app.use(cors());
 
 axios.defaults.headers.common = { "Accept-Language": "ru" };
 
