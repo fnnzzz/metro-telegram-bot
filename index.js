@@ -3,6 +3,8 @@ const axios = require("axios");
 const express = require("express");
 const MongoClient = require("mongodb").MongoClient;
 const cors = require("cors");
+const format = require("date-fns/format");
+const ruLocale = require("date-fns/locale/ru");
 
 const app = express();
 const port = 80;
@@ -30,23 +32,42 @@ bot.onText(/\/add(@\w+)?\s(.+)/, (msg, match) => {
       let { results = [] } = data;
 
       if (!results.length) {
-        return bot.sendMessage(chatId, "Сорян братан, ниче не нашел 🙈🙉🙊");
+        return bot.sendMessage(chatId, "Сорян братан, ниче не нашел 🙈🙉🙊", {
+          disable_notification: true,
+        });
       }
 
       results = results.slice(0, 10);
 
       const text = results
         .map((product) => {
-          return `<a href="https://metro.zakaz.ua/ru/products/${
-            product.ean
-          }/">${product.title}</a>\n<b>${(product.price / 100).toFixed(
-            2
-          )} грн</b>`;
+          const _formatPrice = (price) => (price / 100).toFixed(2) + " грн";
+
+          let priceText = "";
+
+          if (product.discount && product.discount.status) {
+            const { old_price, due_date, value } = product.discount;
+            const formattedDate = format(new Date(due_date), "dd MMMM", {
+              locale: ruLocale,
+            });
+
+            priceText = `<s>${_formatPrice(
+              old_price
+            )}</s> 🤑💸💰 ${_formatPrice(
+              product.price
+            )} (скидон <u>${value}%</u> до ${formattedDate})`;
+          } else {
+            priceText = _formatPrice(product.price);
+          }
+
+          return `<a href="https://metro.zakaz.ua/ru/products/${product.ean}/">${product.title}</a>\n<b>${priceText}</b>`;
         })
         .join("\n\n");
 
       bot.sendMessage(chatId, text, {
         parse_mode: "HTML",
+        disable_web_page_preview: true,
+        disable_notification: true,
         reply_markup: {
           inline_keyboard: results.map((product, index) => {
             return [
@@ -65,7 +86,7 @@ bot.onText(/\/add(@\w+)?\s(.+)/, (msg, match) => {
       });
     })
     .catch((err) => {
-      bot.sendMessage(chatId, `${err}`);
+      bot.sendMessage(chatId, `${err}`, { disable_notification: true });
     });
 });
 
@@ -95,7 +116,9 @@ bot.on("callback_query", (cbQuery) => {
     }
   }
 
-  bot.sendMessage(cbQuery.message.chat.id, text);
+  bot.sendMessage(cbQuery.message.chat.id, text, {
+    disable_notification: true,
+  });
   addProductInProccesing = data.ean || true;
 });
 
@@ -104,7 +127,9 @@ bot.on("message", (msg) => {
   if (addProductInProccesing) {
     if (+msg.text === 0 || msg.text.toLowerCase().trim() === "отмена") {
       addProductInProccesing = false;
-      return bot.sendMessage(chatId, "❌ Охрана отмена");
+      return bot.sendMessage(chatId, "❌ Охрана отмена", {
+        disable_notification: true,
+      });
     }
 
     if (!isNaN(msg.text)) {
@@ -138,7 +163,9 @@ bot.on("message", (msg) => {
                       }
 
                       addProductInProccesing = false;
-                      bot.sendMessage(chatId, "😎 Окич, добавил в корзину");
+                      bot.sendMessage(chatId, "😎 Окич, добавил в корзину", {
+                        disable_notification: true,
+                      });
                     }
                   );
               },
@@ -158,7 +185,9 @@ bot.on("message", (msg) => {
 });
 
 function sendErrorMessage(chatId) {
-  bot.sendMessage(chatId, "😢 Шото проблемка какая-то возникла");
+  bot.sendMessage(chatId, "😢 Шото проблемка какая-то возникла", {
+    disable_notification: true,
+  });
 }
 
 app.get("/get-cart", (req, res) => {
