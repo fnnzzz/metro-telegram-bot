@@ -116,10 +116,12 @@ bot.on("callback_query", (cbQuery) => {
     }
   }
 
-  bot.sendMessage(cbQuery.message.chat.id, text, {
-    disable_notification: true,
-  });
-  addProductInProccesing = data.ean || true;
+  setTimeout(() => {
+    bot.sendMessage(cbQuery.message.chat.id, text, {
+      disable_notification: true,
+    });
+    addProductInProccesing = data.ean || true;
+  }, 100);
 });
 
 bot.on("message", (msg) => {
