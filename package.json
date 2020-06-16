@@ -4,9 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "docker build --rm -t metrobot .",
+    "deploy": "docker stop metrobot-container || true && docker run -d --rm -e BOT_TOKEN=${BOT_TOKEN} -e MONGODB_PASSWORD=${MONGODB_PASSWORD} -p 80:80 --name metrobot-container metrobot"
   },
-  "author": "",
+  "author": "Vlad Feninets",
   "license": "ISC",
   "dependencies": {
     "axios": "^0.19.2",
