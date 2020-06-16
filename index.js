@@ -48,12 +48,12 @@ bot.onText(/\/add(@\w+)?\s(.+)/, (msg, match) => {
       bot.sendMessage(chatId, text, {
         parse_mode: "HTML",
         reply_markup: {
-          inline_keyboard: results.map((product) => {
+          inline_keyboard: results.map((product, index) => {
             return [
               {
                 text: product.title,
                 callback_data: JSON.stringify({
-                  title: product.title,
+                  index,
                   bundle: product.bundle,
                   ean: product.ean,
                   unit: product.unit,
@@ -76,7 +76,10 @@ bot.on("callback_query", (cbQuery) => {
 
   const data = JSON.parse(cbQuery.data);
 
-  bot.sendMessage(cbQuery.message.chat.id, data.title);
+  bot.sendMessage(
+    cbQuery.message.chat.id,
+    "👉👉👉 " + cbQuery.message.reply_markup.inline_keyboard[data.index][0].text
+  );
 
   let text = "";
 
