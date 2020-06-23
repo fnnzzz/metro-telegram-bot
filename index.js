@@ -40,7 +40,7 @@ bot.onText(/\/add(@\w+)?\s(.+)/, (msg, match) => {
       results = results.slice(0, 10);
 
       const text = results
-        .map((product) => {
+        .map((product, index) => {
           const _formatPrice = (price) => (price / 100).toFixed(2) + " грн";
 
           let priceText = "";
@@ -60,7 +60,9 @@ bot.onText(/\/add(@\w+)?\s(.+)/, (msg, match) => {
             priceText = _formatPrice(product.price);
           }
 
-          return `<a href="https://metro.zakaz.ua/ru/products/${product.ean}/">${product.title}</a>\n<b>${priceText}</b>`;
+          return `<a href="https://metro.zakaz.ua/ru/products/${
+            product.ean
+          }/">${index + 1} ${product.title}</a>\n<b>${priceText}</b>`;
         })
         .join("\n\n");
 
@@ -223,6 +225,13 @@ app.get("/get-cart", (req, res) => {
         res.json(formattedResponse.reverse());
       }
     });
+  });
+});
+
+app.get("/clear", (req, res) => {
+  client.connect((err, _client) => {
+    const status = _client.db("metro-bot").collection("orders").remove();
+    res.send(status);
   });
 });
 
