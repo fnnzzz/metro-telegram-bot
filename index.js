@@ -62,7 +62,7 @@ bot.onText(/\/add(@\w+)?\s(.+)/, (msg, match) => {
 
           return `<a href="https://metro.zakaz.ua/ru/products/${
             product.ean
-          }/">${index + 1} ${product.title}</a>\n<b>${priceText}</b>`;
+          }/">#${index + 1} ${product.title}</a>\n<b>${priceText}</b>`;
         })
         .join("\n\n");
 
@@ -74,7 +74,7 @@ bot.onText(/\/add(@\w+)?\s(.+)/, (msg, match) => {
           inline_keyboard: results.map((product, index) => {
             return [
               {
-                text: product.title,
+                text: `#${index + 1} ${product.title}`,
                 callback_data: JSON.stringify({
                   index,
                   bundle: product.bundle,
